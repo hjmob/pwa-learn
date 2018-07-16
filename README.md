@@ -1,10 +1,10 @@
 # pwa-learn
-pwa学习测试demo
+pwa学习测试DEMO
 
-本教程通过express 搭建
+本示例用express搭建
 
-安装
+安装依赖
 npm install
 
-启动
+启动服务器
 npm start
