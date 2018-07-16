@@ -1,15 +1,15 @@
-importScripts('/javascripts/idb-keyval.js');
-
-var cacheName = '117';
-
-cacheSource = [
-  '/javascripts/test.js?V=2',
-  '/images/huoying.jpg',
-  '/stylesheets/style6.css'
-]
+let cacheName = '126';
 
 //用于判断用户第一次注册service worker,不提示更新
 let isFirstServiceWorker = true;
+
+let cacheSource = [
+  '/javascripts/test.js',
+  '/images/huoying.jpg',
+  '/stylesheets/style.css?v=3'
+]
+
+let isSaveHtml = false;//是否保存html
 
 //安装阶段跳过等待，直接进入 active
 self.addEventListener('install', function(event) {
@@ -30,7 +30,6 @@ self.addEventListener('install', function(event) {
       self.skipWaiting()
     })
 
-
     event.waitUntil(p);
 });
 
@@ -38,6 +37,7 @@ self.addEventListener('activate', event => {
   let p = self.clients.claim();
   if( ! isFirstServiceWorker ){
     p.then(()=>{
+      //向主进程发送消息，提醒用户更新
       self.clients.matchAll().then(clientList => {
           clientList.forEach(client => {
               //client.postMessage('reload');
@@ -52,6 +52,9 @@ self.addEventListener('activate', event => {
 
 //fetch  接口不缓存sw.js 和 接口请求
 self.addEventListener('fetch', function(event) {
+  //可以看到哪些东西会触发fetch事件
+  console.log("请求地址:",event.request.url)
+
   event.respondWith(
     caches.match(event.request)
     .then(function(response) {
@@ -60,7 +63,7 @@ self.addEventListener('fetch', function(event) {
       }
 
       var fetchRequest = event.request.clone();
-      console.log('请求：',fetchRequest)
+
       return fetch(fetchRequest).then(
         function(fetchResponse) {
           if(!fetchResponse || fetchResponse.status !== 200) {
@@ -68,16 +71,13 @@ self.addEventListener('fetch', function(event) {
           }
 
           var responseToCache = fetchResponse.clone();
-
+          //不保存html
           if(checkFileExt( responseToCache.url )){
-            console.log('保存：',responseToCache.url)
             caches.open(cacheName)
             .then(function(cache) {
               cache.put(event.request, responseToCache);
             });
           }
-
-
           return fetchResponse;
         }
       );
@@ -85,10 +85,10 @@ self.addEventListener('fetch', function(event) {
   );
 });
 
-//检测文件后缀名
+//检测文件后缀名是否在白名单中
 function checkFileExt(filename){
    var flag = false; //状态
-   var arr = ["jpg","png","gif",'css','js'];
+   var arr = ["jpg","png","gif",'css','js',"webp","woff"];
    //取出上传文件的扩展名
    var index = filename.lastIndexOf(".");
    var ext = filename.substr( index + 1 );
@@ -101,53 +101,3 @@ function checkFileExt(filename){
    }
    return flag;
 }
-// The sync event for the contact form
-self.addEventListener('sync', function (event) {
-  console.log(333333333,event.tag)
-  if (event.tag === 'content') {
-        console.log(44444444444)
-        event.waitUntil(
-          idbKeyval.get('sendMessage').then(value =>{
-              console.log(5555555555,value)
-              fetch('/sendMessage/', {
-                method: 'POST',
-                headers: new Headers({ 'content-type': 'application/json' }),
-                body: JSON.stringify(value)
-              }).then( response =>{
-
-                if( response.status == 200 ) {
-                  // 删除客户端存储的数据
-                  idbKeyval.delete('sendMessage');
-
-                  response.json().then(function(data){
-                      console.log("后台已经保存了：",data)
-                  });
-                }
-              })
-            }
-          )
-        );
-    }
-});
-
-self.addEventListener('push', function (event) {
-
-  var payload = event.data ? JSON.parse(event.data.text()) : 'no payload';
-
-  var title = 'da ming ge';
-
-  //显示消息
-  event.waitUntil(
-    self.registration.showNotification(title, {
-      body: payload.msg,
-      url: payload.url,
-      icon: payload.icon
-    })
-  );
-});
-
-self.addEventListener('notificationclick', function (event) {
-  event.notification.close();
-  clients.openWindow('http://localhost:8087');
-
-}, false);

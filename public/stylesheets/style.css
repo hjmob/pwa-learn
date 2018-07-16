@@ -2,13 +2,12 @@ html,body{padding:0;margin: 0;}
 
 body {
   font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
-  color:blue;
 }
 
 header{
   text-align: center;
   font-size: 36px;
-  background: blue;
+  background: yellow;
   color: white;
   padding: 15px 0;
 }
