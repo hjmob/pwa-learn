@@ -7,7 +7,7 @@ body {
 header{
   text-align: center;
   font-size: 36px;
-  background: yellow;
+  background: blue;
   color: white;
   padding: 15px 0;
 }
@@ -21,4 +21,9 @@ figcaption{font-size: 30px;color: red;margin-top: 20px;}
 
 img{
   width: 200px;
+}
+
+
+a{
+  color:blue;
 }

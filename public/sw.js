@@ -1,15 +1,15 @@
-let cacheName = '126';
+let cacheName = 'cache-version-187';
+let isSaveHtml = false;//是否保存html
 
 //用于判断用户第一次注册service worker,不提示更新
 let isFirstServiceWorker = true;
+let version = 37;
 
 let cacheSource = [
-  '/javascripts/test.js',
-  '/images/huoying.jpg',
-  '/stylesheets/style.css?v=3'
+  `/javascripts/test.js?v=${version}`,
+  `/images/huoying.jpg?v=${version}`,
+  `/stylesheets/style.css?v=${version}`
 ]
-
-let isSaveHtml = false;//是否保存html
 
 //安装阶段跳过等待，直接进入 active
 self.addEventListener('install', function(event) {
@@ -50,7 +50,7 @@ self.addEventListener('activate', event => {
 
 });
 
-//fetch  接口不缓存sw.js 和 接口请求
+//监听fetch请求事件，除 sw.js 请求不监听外，其他资源都会被监听
 self.addEventListener('fetch', function(event) {
   //可以看到哪些东西会触发fetch事件
   console.log("请求地址:",event.request.url)
@@ -71,13 +71,21 @@ self.addEventListener('fetch', function(event) {
           }
 
           var responseToCache = fetchResponse.clone();
-          //不保存html
-          if(checkFileExt( responseToCache.url )){
+
+          if( isSaveHtml ){
             caches.open(cacheName)
-            .then(function(cache) {
-              cache.put(event.request, responseToCache);
-            });
+              .then(function(cache) {
+                cache.put(event.request, responseToCache);
+              });
+          }else{//不保存html
+            if( checkFileExt( responseToCache.url ) ){
+              caches.open(cacheName)
+                .then(function(cache) {
+                  cache.put(event.request, responseToCache);
+                });
+            }
           }
+
           return fetchResponse;
         }
       );
